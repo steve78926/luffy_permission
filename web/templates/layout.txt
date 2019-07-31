@@ -1,0 +1,17 @@
+
+需要补充的前端知识
+
+layout.html: clearfix
+
+layout.html: aria-hidden="true"
+
+nav.css: overflow: visible: overflow 属性规定当内容溢出元素框时发生的事情。
+
+nav.css:     position: relative;
+
+nav.css: .nav .left-menu .menu-item:hover .more-info
+
+.nav .left-menu .menu-item:hover .more-info {    #鼠标移动到某个元素上，display: block
+    display:block;
+}
+
