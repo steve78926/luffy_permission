@@ -1,0 +1,142 @@
+
+.nav {
+    min-width:400px;
+    height:48px;
+    background-color: #2f71ab;
+    color: white;
+    line-height: 48px;
+    font-size: 13px;
+    /*overflow: visible;   !*  这里为什么用overflow  *!*/
+}
+
+.nav .logo-area {
+    width: 220px;
+    height:48px;
+    background-color: #1c5a9c;
+    text-align: center;
+    /*overflow:hidden;    !*  这里为什么用overflow  *!*/
+}
+
+.nav .logo-area > a {
+    text-decoration: none;
+    color: white;           /*  这里设置颜色对logo-area > a 有效    */
+    display: inline-block;    /* 不明其意: 这项决定 logo 图标与路飞学城 4个字的距离   */
+}
+
+.nav .logo-area .logo {
+    width: 37px;
+    height: 37px;
+    float: left;     /* 不明其意  */
+    margin:6px;      /* 不明其意  */
+    margin-right: 10px;
+}
+
+.nav .left-menu {
+    /*font-size: 13px;     !* 不明其意  *!*!*/
+}
+
+.nav .left-menu .menu-item {
+    display: inline-block;   /* 不明其意 */
+    padding: 0 15px;
+    cursor: pointer;
+    position: relative;   /* 父相子绝：相对于子盒子more-info子菜单来说, menu-item是父盒子 */
+    color: white;     /* 不明其意 : 是否需要,答：需要，否则，资产管理，用户管理，路飞管理不是白色 */
+    text-decoration: none;
+}
+
+.nav .left-menu .menu-item:hover {
+    background-color: #337ab7;
+}
+
+.nav .left-menu .menu-item .more-info {
+    display: none;      /**  这项决定，资产管理，用户管理，路飞管理是否在导航条上      **/
+    position: absolute;     /* 盒子more-info是子菜单，在导航的下面  */
+    top: 48px;
+    left: 0;
+    border: 1px solid rgba(0,0,0, .125);
+    -webkit-box-shadow: 0 6px 12px rgba(0,0,0, .175);
+    box-shadow: 0 6px 12px rgba(0,0,0, .175);
+    background-color: #fff;
+    color:#333;
+    z-index: 1003;          /* 不明其意 */
+}
+
+.nav .left-menu .menu-item:hover .more-info {      /* hover .more-info 决定下拉菜单显示是否正常  */
+    display: block;
+}
+
+.nav .left-menu .menu-item .more-info .more-item {
+    display: block;
+    min-width: 120px;
+    padding: 0 15px;
+    line-height: 35px;
+    text-decoration: none;
+    color:#000;
+}
+
+.nav .left-menu .menu-item .more-info .more-item:hover {
+    background-color: #f1f0f0;
+}
+
+.nav .right-menu .user-menu{
+    padding: 0 8px;
+    cursor: pointer;
+    color: white;
+    text-decoration: none;
+}
+
+.nav .right-menu .user-menu:hover {    /* 鼠标放在用户菜单上的背景颜色  */
+    background-color: #337ab7;
+}
+
+.nav .right-menu .user-info {  /* 父盒子  */
+    padding: 0 30px 0 10px;
+    height: 48px;
+    position: relative;         /* 父相子绝：user-info 是父盒子  */
+}
+
+.nav .right-menu .user-info:hover .avatar { /*  没效果, 设置 .nav .right-menu .user-info .more-info {  之后有效果 */
+    background-color: green;
+}
+
+.nav .right-menu .user-info .avatar {    /* 用户信息图标  */
+    display: inline-block;
+    padding: 0 10px;
+    height: 48px;
+}
+
+.nav .right-menu .user-info .avatar img {
+    /* margin-top: 2px; */
+}
+
+.nav .right-menu .user-info .more-info {
+    display: none;   /* 隐藏子菜单，仅当鼠标放在用户图标上时才显示子菜单 */
+    position: absolute;
+    top: 48px;
+    right: 20px;
+    border: 1px solid rgba(0,0,0, .15);
+    -webkit-box-shadow: 0 6px 12px rgba(0,0,0, .175);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, .175);
+    background-color: #fff;
+    color:#333;
+    /*z-index: 1002;   !*  这个索引若删除是什么效果？  *!*/
+}
+
+.nav .right-menu .user-info:hover .more-info {  /*  鼠标放到用户图标，显示子菜单  */
+    display: block;
+}
+
+.nav .right-menu .user-info .more-info .more-item {    /* 下拉菜单 */
+    display:block;
+    min-width: 100px;       /*  下拉菜单过宽：原来160px, 改为100px  */
+    padding: 0px 15px;
+    line-height:  35px;
+    text-decoration: none;
+    color: #000;
+}
+
+.nav .right-menu .user-info .more-info .more-item:hover {   /*  用户：个人信息，注销：子菜单放上去的背景颜色   */
+    background-color: #f1f0f0;
+}
+
+
