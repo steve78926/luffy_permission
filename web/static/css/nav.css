@@ -30,7 +30,6 @@
     width: 37px;
     height: 37px;
     float: left;     /* 不明其意：未解决，暂时想不明白，先跳过  */
-    float: left;     /* 不明其意：未解决，暂时想不明白，先跳过  */
     margin:6px;      /* 不明其意，已经解决：与父元素的上下左右边距  */
     margin-right: 10px;
 }
