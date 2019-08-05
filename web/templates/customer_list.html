@@ -3,24 +3,23 @@
     <div class="luffy-container">
         <div class="btn-group">
             <a href="/customer/add" class="btn btn-default">
-                <i class="fa fa-plus-square"></i>添加客户
+                <i class="fa fa-plus-square"></i>  添加客户
             </a>
-            <a href="/customer/import" class="btn btn-default">
-                <i class="fa fa-file-excel-o"></i>批量导入
+            <a href="/cumtomer/import" class="btn btn-default">
+                <i class="fa fa-file-excel-o"></i>  批量导入
             </a>
         </div>
-        <table class="table table-bordered table-hover">
+        <table class="table table-bordered table-responsive">
             <thead>
             <tr>
-                <th>ID</th>
-                <th>客户姓名</th>
-                <th>年龄</th>
-                <th>邮箱</th>
-                <th>公司</th>
-                <th>选项</th>
+                <td>ID</td>
+                <td>姓名</td>
+                <td>年龄</td>
+                <td>邮箱</td>
+                <td>公司</td>
+                <td>选项</td>
             </tr>
             </thead>
-            <tbody>
             {% for row in data_list %}
                 <tr>
                     <td>{{ row.id }}</td>
@@ -29,18 +28,16 @@
                     <td>{{ row.email }}</td>
                     <td>{{ row.company }}</td>
                     <td>
-                        <a href="/comtomer/edit/{{ row.id }}/">
-                            <i class="fa fa-edit"></i>
+                        <a style="color:#333" href="/cumtomer/edit/{{ row.id }}">
+                            <i class="fa fa-edit" aria-hidden="true"></i>
                         </a>
                         |
-                        <a href="/cumtomer/del/{{ row.id }}/">
-                            <i class="fa fa-trash-o"></i>
+                        <a style="color:#d9534f" href="/cumtomer/del/{{ row.id }}">
+                            <i class="fa fa-trash-o" aria-hidden="true"></i>
                         </a>
                     </td>
                 </tr>
             {% endfor %}
-            </tbody>
         </table>
     </div>
-
 {% endblock content %}
