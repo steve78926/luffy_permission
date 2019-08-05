@@ -8,7 +8,7 @@ class Customer(models.Model):
     客户表
     '''
     name = models.CharField(verbose_name='客户名称', max_length=32)
-    agent = models.CharField(verbose_name='年龄', max_length=4)
+    age = models.CharField(verbose_name='年龄', max_length=4)
     email = models.EmailField(verbose_name='邮箱', max_length=20)
     company = models.CharField(verbose_name='公司名称', max_length=32)
 
