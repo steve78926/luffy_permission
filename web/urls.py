@@ -8,5 +8,7 @@ urlpatterns = [
     re_path(r'customer/add/$', customer.customer_add),
     re_path(r'cumtomer/edit/(?P<cid>\d+)/$', customer.customer_edit),
     re_path(r'customer/del/(?P<cid>\d+)/$', customer.customer_del),
+    re_path(r'customer/import/$', customer.customer_import),
+    re_path(r'customer/tpl/$', customer.customer_tpl),
 ]
 

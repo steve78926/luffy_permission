@@ -1,0 +1,35 @@
+{% extends 'layout.html' %}
+{% block content %}
+    <div class="luffy-container">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-group">
+                <div class="import-relative">
+                    <div class="import-absolute">
+                        <i class="fa fa-cloud-upload" aria-hidden="true"></i>
+                        <span>点击上传execel文件</span>
+                    </div>
+                    <input name="customer_excel" type="file" id="excelFile" class="import-input">
+                </div>
+                <p>注意: 批量导入的excel需要使用规定的格式模板. <a href="/customer/tpl">下载模板</a></p>
+            </div>
+            <button type="submit" class="btn btn-primary">上传</button>
+            {% if status %}
+                <span style="color:green;">{{ msg }}</span>
+            {% else %}
+                <span style="color:red;">{{ msg }}</span>
+            {% endif %}
+        </form>
+    </div>
+{% endblock content %}
+
+{% block js %}
+    <script>
+        $(function(){
+            $('#excelFile').change(function(e){
+                var fileName = e.currentTarget.files[0].name;
+                $(this).prev().find('span').text(fileName);
+            })
+        })
+    </script>
+{% endblock js %}

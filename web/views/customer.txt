@@ -1,0 +1,35 @@
+
+搞清xlrd的用法
+
+import xlrd
+
+workbook = xlrd.open_workbook(file_contents=customer_excel.file.read())
+
+sheet = workbook.sheet_by_index(0)  #通过索引顺序获取
+
+sheet.nrows   #获取该sheet中的有效行数
+
+row = sheet.row(row_num)  #返回由该行中所有的单元格对象组成的列表
+
+object_list.append(models.Customer(**row_dict))
+
+=======================  mimetype  =======================
+
+ content_type = mimetypes.guess_type(tpl_path)[0]
+
+ =======================   FileResponse  =======================
+  response = FileResponse(open(tpl_path, mode='rb'), content_type=content_type)
+
+=======================  批量导入过程  =======================
+1. 从请求中获取文件
+2. 用xlrd打开第1步的文件
+3. 获取excel文件的sheet
+4. row_map
+5. 定义对象列表
+6. 双循环：
+   外循环： 处理行
+        内循环： 处理行中列
+
+   将当前行格数据加入对象列表
+7. 批量插入数据库
+
