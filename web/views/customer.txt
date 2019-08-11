@@ -20,16 +20,62 @@ object_list.append(models.Customer(**row_dict))
  =======================   FileResponse  =======================
   response = FileResponse(open(tpl_path, mode='rb'), content_type=content_type)
 
-=======================  批量导入过程  =======================
+=======================  批量导入过程 2019-08-11 =======================
 1. 从请求中获取文件
 2. 用xlrd打开第1步的文件
 3. 获取excel文件的sheet
 4. row_map
 5. 定义对象列表
 6. 双循环：
-   外循环： 处理行
-        内循环： 处理行中列
+   外循环： 获取该行所有单元格数据，定义行字典
+        内循环：把外循环当前行，构建行字典: key row_map['name_text'], value: 内循环当前列的值
+   用行字典构建对象列表
 
-   将当前行格数据加入对象列表
 7. 批量插入数据库
+
+======================= row_map说明 2019-08-11 =======================
+
+ row_map = {
+            0: {'text': '客户姓名', 'name': 'name'},
+            1: {'text': '年龄', 'name': 'age'},
+            2: {'text': '邮箱','name': 'email'},
+            3: {'text': '公司', 'name': 'company'},
+        }
+
+实际使用的是0, 1, 2, 3  和name: name, 'name': 'age', 'name': 'email', 'name': company
+
+'text': '客户姓名', 'text': '年龄' 等等，只是标注作用，实际导入时未用到
+
+row_map: 改成这样，也不会报错：
+
+ row_map = {
+            0: {'name': 'name'},
+            1: {'name': 'age'},
+            2: {'name': 'email'},
+            3: {'name': 'company'},
+        }
+
+
+
+======================= 两种写法的不同 2019-08-11 =======================
+object_list.append(row_dict)
+models.Customer.objects.bulk_create(object_list, batch_size=20)
+
+批量写入数据库时会报错：'dict' object has no attribute 'pk'
+
+正确的写法：
+
+  object_list.append(models.Customer(**row_dict))
+
+  models.Customer.objects.bulk_create(object_list, batch_size=20)
+
+
+
+=======================  下载批量导入模板 2019-08-11 =======================
+1. 构建下载模板的路径
+2. 获取下载模板路径的MIME类型
+3. 用 FileResponse 将文件转换成response
+4. 指定response的'content-Disposition' 属性值，以附件形式下载，并指定文件名
+5. return response
+
 
