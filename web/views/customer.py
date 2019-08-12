@@ -29,7 +29,7 @@ def customer_add(request):
         form = CustomerForm(data=request.POST)
         if form.is_valid():
             form.save()
-            return redirect('/customer.txt/list')
+            return redirect('/customer/list')
     return render(request, 'customer_add.html', {'form': form})
 
 
@@ -46,7 +46,7 @@ def customer_edit(request, cid):
         form = CustomerForm(data=request.POST,instance=obj)    #注意，这里必须是一个关键字参数，否则，如果这样写CustomerForm(request.POST,obj)，form.save是增加记录，而不是修改
         if form.is_valid():
             form.save()
-            return redirect('customer.txt/list')
+            return redirect('customer/list')
     return render(request, 'customer_edit.html', {'form': form})
 
 
@@ -58,7 +58,7 @@ def customer_del(request, cid):
     :return:
     '''
     models.Customer.objects.filter(id=cid).delete()
-    return redirect('/customer.txt/list')
+    return redirect('/customer/list')
 
 
 def customer_import(request):
