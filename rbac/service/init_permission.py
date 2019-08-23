@@ -87,3 +87,5 @@ def init_permission(current_user, request):
     ############################       一级菜单代码结束   ############################
     request.session[settings.PERMISSION_SESSION_KEY] = permission_list
     request.session[settings.MENU_SESSION_KEY] = menu_dict
+
+    ###############100 test #####################
