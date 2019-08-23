@@ -54,14 +54,14 @@ def multi_menu(request):
 
     #创建一个空的有序字典
     ordered_dict = OrderedDict()
-    for key in key_list:
-        val = menu_dict[key]
-        val['class'] = 'hide'
+    for key in key_list:        #key值如1,2...
+        val = menu_dict[key]    #val值如 上面示例1：{}， 2：{}
+        val['class'] = 'hide'   #添加默认的样式类: class: 'hide'
         for per in val['children']:
             regex = "^%s$" % (per['url'],)
             if re.match(regex, request.path_info):
-                per['class'] = 'active'
-                val['class'] = ''
+                per['class'] = 'active'     #如果当前访问的URL是per['url']， 则将per['url']设置为active
+                val['class'] = ''            #同时父新的class：去掉hide样式
         ordered_dict[key] = val
 
     """

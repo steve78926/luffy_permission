@@ -31,6 +31,9 @@ def init_permission(current_user, request):
                                                                                       "permissions__menu__icon",
                                                                                       ).distinct()
 
+    #permissions__menu_id, 与 permissions__menu__title, permissions__menu__icon 有什么区别？
+    # permissions__menu_id为什么用一个下划线？ permissions__menu__title, permissions__menu__icon 用两个下划线
+    #答：permissions__menu_id表示permission表的menu_id列，permissions__menu__title 表示menu表的title列
     #3. 获取权限 + 菜单信息
     # permissions__id， permissions__url 必须用双引号引起来，否则报错
     #获取权限中所有的URL
@@ -44,11 +47,11 @@ def init_permission(current_user, request):
     for item in permission_queryset:
         permission_list.append(item['permissions__url'])    #构建权限列表
         menu_id = item['permissions__menu_id']
-        if not menu_id:
+        if not menu_id:   #如果menu_id为空，说明这行url不是一个菜单，跳过当前记录，处理下一行记录
             continue
 
         node = {'title': item['permissions__title'], 'url': item['permissions__url']}
-        if menu_id in menu_dict:
+        if menu_id in menu_dict:        #menu_id的取值如：1，2。。。
             menu_dict[menu_id]['children'].append(node)     #menu_id 是一级菜单ID, append(node) 是再次增加二级菜单项
         else:
             menu_dict[menu_id] = {
@@ -57,7 +60,7 @@ def init_permission(current_user, request):
                 'children': [node,]
             }
 
-    print(menu_dict)
+    print(menu_dict)  #构建二极菜单数据结构
     #返回：
     # {1:
     #      {
