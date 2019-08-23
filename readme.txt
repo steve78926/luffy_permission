@@ -15,3 +15,6 @@ D:\lufei_xue_cheng\module7\crm\luffy_permission\web\urls.py 在执行from web.vi
 不知道是从views目录里导入，还是从views.py里导入。
 
 解决： 移除web目录下的views.py，正常启动项目
+
+
+{1: {'title': '信息管理', 'icon': 'fa-camero-retro', 'children': [{'title': '客户列表', 'url': '/customer/list/'}]}, 2: {'title': '用户管理', 'icon': 'fa-fire', 'children': [{'title': '账单列表', 'url': '/payment/list/'}]}}

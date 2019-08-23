@@ -1,0 +1,13 @@
+2019-08-13
+
+有道笔记部分：
+
+1. 关于templates查找顺序：
+
+django 查找模板的顺序：django 先到项目的根目录下找templates, 如果找不到，根据项目下的settings.py下的INSTALLED_APPS = []
+
+里app的注册顺序查找模板目录templates, 在该目录下查找模板文件
+
+   可以在web应用和rbac应用里分别放一套templates, static 给各自的应用使用
+
+2.

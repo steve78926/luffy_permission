@@ -49,6 +49,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'rbac.middlewares.rbac.RbacMiddleware',
 ]
 
 ROOT_URLCONF = 'luffy_permission.urls'
@@ -120,3 +121,39 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+
+###############################   权限相关的配置  ###############################
+PERMISSION_SESSION_KEY="luffy_permission_url_list_key"
+MENU_SESSION_KEY = "luffy_permission_menu_key"
+VALID_URL_LIST = [          #VALID_URL_LIST 是不受限权控制的白名单
+    '/login/',
+    '/admin/.*',
+]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
