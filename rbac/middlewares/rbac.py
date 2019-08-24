@@ -1,0 +1,53 @@
+#-*- coding:utf-8-*-
+
+import re
+from django.utils.deprecation import MiddlewareMixin
+from django.shortcuts import HttpResponse
+from django.conf import settings
+
+
+class RbacMiddleware(MiddlewareMixin):
+    '''
+    用户权限信息校验
+    #中间件不应该写在web应用中
+    '''
+
+    def process_request(self, request):
+        '''
+        当用户请求进入时触发执行
+        :param request:
+        :return:
+        '''
+        """
+        1. 获取当前用户请求的URL
+        2. 获取当前用户在session中保存的权限列表 ['/customer/list', '/customer/list/(?P<cid>\\d+)/']
+        3. 权限信息匹配
+       """
+        # http://127.0.0.1:8000/customer/list/         path_info:  /customer/list/
+        # http://127.0.0.1:8000/customer/list/?age=10  path_info同样是:  /customer/list/
+
+        current_url = request.path_info
+        for valid_url in settings.VALID_URL_LIST:       # settings.VALID_URL_LIST 是不受限权控制的白名单
+            if re.match(valid_url, current_url):        #白名单中的URL无需权限验证即可访问
+                return None     # 返回None 中间件不拦截，继续执行后面的视图
+
+
+        #这里用get()，而不是[]获取字典的key对应的vlaue, 因为用户没有登录时，session为空，get()不会报错
+        permission_list = request.session.get(settings.PERMISSION_SESSION_KEY)
+
+        if not permission_list:
+            return HttpResponse('未获取到用户权限信息，请重新登录！')
+
+        flag = False        #flat = False 表示未匹配成功
+        for url in permission_list:
+            reg = "^%s$" % url                # 给url 加起始符，终止符，精确匹配
+            if re.match(reg, current_url):    #不能用current_url == url 因为reg变量中有正则表达式
+                flag = True
+                break
+
+
+        print("flag:", flag)
+
+        #中间件process_request() 如果有返回值，则不会走到视图，而是直接返回
+        if not flag:      #如果flag=False, 则not flag = True, 无权访问， 如果flag=True, 则not flag = False, 继续向后执行
+            return HttpResponse("无权访问")    #test
