@@ -28,6 +28,7 @@ def multi_menu(request):
     :return:
     '''
     menu_dict = request.session[settings.MENU_SESSION_KEY]
+
     """
     menu_dict形如：
 {
@@ -58,8 +59,9 @@ def multi_menu(request):
         val = menu_dict[key]    #val值如 上面示例1：{}， 2：{}
         val['class'] = 'hide'   #添加默认的样式类: class: 'hide'
         for per in val['children']:
-            regex = "^%s$" % (per['url'],)
-            if re.match(regex, request.path_info):
+            # regex = "^%s$" % (per['url'],)
+            # if re.match(regex, request.path_info):
+            if per['id'] == request.current_selected_permission:
                 per['class'] = 'active'     #如果当前访问的URL是per['url']， 则将per['url']设置为active
                 val['class'] = ''            #同时父新的class：去掉hide样式
         ordered_dict[key] = val

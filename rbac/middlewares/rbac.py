@@ -39,10 +39,12 @@ class RbacMiddleware(MiddlewareMixin):
             return HttpResponse('未获取到用户权限信息，请重新登录！')
 
         flag = False        #flat = False 表示未匹配成功
-        for url in permission_list:
-            reg = "^%s$" % url                # 给url 加起始符，终止符，精确匹配
+        for item in permission_list:
+            reg = "^%s$" % item['url']                # 给url 加起始符，终止符，精确匹配
             if re.match(reg, current_url):    #不能用current_url == url 因为reg变量中有正则表达式
                 flag = True
+                #将item['pid'] 或者 item['id']值赋给 request.current_selected_permission, 方便inclusision_tag 获取该值
+                request.current_selected_permission = item['pid'] or item['id']        #如果item['pid'] 为真，返回item['pid']的值，否则返回item['id'] 的值
                 break
 
 
