@@ -61,7 +61,7 @@ def multi_menu(request):
         for per in val['children']:
             # regex = "^%s$" % (per['url'],)
             # if re.match(regex, request.path_info):
-            if per['id'] == request.current_selected_permission:
+            if per['id'] == request.current_selected_permission:  #request.current_selected_permission是当前url对应的权限表id或者pid,本例中1，7
                 per['class'] = 'active'     #如果当前访问的URL是per['url']， 则将per['url']设置为active
                 val['class'] = ''            #同时父新的class：去掉hide样式
         ordered_dict[key] = val
@@ -90,3 +90,20 @@ def multi_menu(request):
     """
 
     return {'menu_dict': ordered_dict}
+
+
+@register.inclusion_tag('rbac/breadcrumb.html')
+def breadcrumb(request):
+    return {'record_list': request.breadcrumb}
+
+@register.filter
+def has_permission(request, name):
+    '''
+    判断是否有权限 , 这个filter函数最多有两个参数
+    :param request:
+    :param name:
+    :return:   默认返回None
+    '''
+    if name in request.session[settings.PERMISSION_SESSION_KEY]:   #request.session[settings.PERMISSION_SESSION_KEY] 是权限字典
+        return True
+

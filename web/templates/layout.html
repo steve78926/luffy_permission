@@ -77,12 +77,7 @@
 
     </div>
     <div class="right-body">
-        <div>
-            <ol class="breadcrumb no-radius no-margin" style="border-bottom: 1px solid #ddd;">
-                <li><a href="">首页</a></li>
-                <li><a href="" class="active">客户管理</a></li>
-            </ol>
-        </div>
+        {%  breadcrumb request %}       {# 面包屑导航条 #}
         {% block content %} {% endblock content %}
     </div>
 </div>

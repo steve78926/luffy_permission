@@ -27,6 +27,8 @@ class Permission(models.Model):
     # icon = models.CharField(verbose_name='图标', max_length=32, null=True, blank=True)
 
     ######################   二级菜单列   ######################
+
+    name = models.CharField(verbose_name='URL别名', max_length=32,unique=True)
     menu = models.ForeignKey(verbose_name='所属菜单',
                              to='Menu',
                              null=True,
@@ -38,7 +40,7 @@ class Permission(models.Model):
                             to='Permission',
                             null=True,
                             blank=True,
-                            related_name='parents',  #反向关联(不明白)
+                            related_name='parents',  #反向自关联时可能出点问题，因此要加上related_name(不明白)
                             help_text='对于非菜单权限需要选择一个可以成为菜单的权限，用户做默认展开和选中菜单',
                             on_delete=models.CASCADE)
 

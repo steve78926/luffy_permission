@@ -26,12 +26,17 @@ def init_permission(current_user, request):
     permission_queryset = current_user.roles.filter(permissions__isnull=False).values("permissions__id",
                                                                                       "permissions__title",
                                                                                       "permissions__url",
+                                                                                      "permissions__name",   #权限的别名
                                                                                       "permissions__pid_id",
+                                                                                      "permissions__pid__title",   #pid 是自关联ForeignKey
+                                                                                      "permissions__pid__url",      #pid 是自关联ForeignKey
                                                                                       "permissions__menu_id",
                                                                                       "permissions__menu__title",
                                                                                       "permissions__menu__icon",
                                                                                       ).distinct()
 
+    #"permissions__pid__title" 表示permissions表中pid外键表，由于是自关联，这个键表还是permission, pid外键对应的记录的title
+    #"permissions__pid__url", 表示permissions表中pid外键表，由于是自关联，这个键表还是permission, pid外键对应的记录的url
     #permissions__menu_id, 与 permissions__menu__title, permissions__menu__icon 有什么区别？
     # permissions__menu_id为什么用一个下划线？ permissions__menu__title, permissions__menu__icon 用两个下划线
     #答：permissions__menu_id表示permission表的menu_id列，permissions__menu__title 表示menu表的title列
@@ -43,16 +48,30 @@ def init_permission(current_user, request):
     #     permission_list.append(item['permission_url'])
 
     # menu_list = []   # 一级菜单
-    permission_list = []
+    #permission_list = []
+    permission_dict = {}
     menu_dict = {}
     for item in permission_queryset:
 
         #permission_list.append(item['permissions__url'])    #构建权限列表
-        permission_list.append({'id': item['permissions__id'],
+        # permission_list.append({'id': item['permissions__id'],
+        #                         'title': item['permissions__title'],
+        #                         'url': item['permissions__url'],
+        #                         'pid': item['permissions__pid_id'],     #当前权限URL对应的外键表（自关联表rbac_permission）的id (本例中1，7)
+        #                         'p_title': item['permissions__pid__title'],    #当前权限URL对应的外键表（自关联表rbac_permission）的title （(本例中客户列表，账单列表）
+        #                         'p_url': item['permissions__pid__url'],
+        #                         })
+
+        permission_dict[item['permissions__name']] = {
+                                'id': item['permissions__id'],
+                                'title': item['permissions__title'],
                                 'url': item['permissions__url'],
-                                'pid': item['permissions__pid_id']
-                                })
+                                'pid': item['permissions__pid_id'],     #当前权限URL对应的外键表（自关联表rbac_permission）的id (本例中1，7)
+                                'p_title': item['permissions__pid__title'],    #当前权限URL对应的外键表（自关联表rbac_permission）的title （(本例中客户列表，账单列表）
+                                'p_url': item['permissions__pid__url'],
+                                }
         menu_id = item['permissions__menu_id']
+        print("menu_id:",menu_id)
         if not menu_id:   #如果menu_id为空，说明这行url不是一个菜单，跳过当前记录，处理下一行记录
             continue
 
@@ -67,18 +86,43 @@ def init_permission(current_user, request):
             }
 
     print(menu_dict)  #构建二极菜单数据结构
-    #返回：
-    # {1:
-    #      {
-    #          'title': '信息管理',
-    #         'icon': 'fa-camero-retro',
-    #         'children': [
-    #             {'title': '客户列表', 'url': '/customer/list/'},
-    #             {'title': '账单列表', 'url': '/payment/list/'}
-    #         ]
-    #      }
-    # }
-       ############################       一级菜单   ############################
+
+    #如果权限表中url:客户列表的menu_id=1,同时，账单列表的menu_id=1，即两个menu_id相同
+    #则：menu_dict结果：
+    '''
+        {1:
+            {'title': '信息管理',
+             'icon': 'fa-camero-retro',
+             'children': [
+                 {
+                    'id': 1, 'title': '客户列表',
+                    'url': '/customer/list/'
+                 },
+                 {
+                     'id': 7, 'title': '账单列表',
+                    'url': '/payment/list/'
+                 }
+                ]
+             }
+         }
+    '''
+    #如果权限表中url:客户列表的menu_id=1,同时，账单列表的menu_id=2，，即两个menu_id不相同
+    #则：menu_dict结果：
+
+
+    '''
+            {
+            1:
+                {'title': '信息管理', 'icon': 'fa-camero-retro',
+                'children': [{'id': 1, 'title': '客户列表', 'url': '/customer/list/'}]},
+             2:
+                 {'title': '用户管理', 'icon': 'fa-fire', '
+                 children': [{'id': 7, 'title': '账单列表', 'url': '/payment/list/'}]}
+            }
+
+    '''
+
+    ############################       一级菜单   ############################
         # if item['permissions__is_menu']:
         #     temp = {                                           #构建菜单临时字典，包括，菜单名称，菜单图标，菜单URL
         #         'title': item['permissions__title'],
@@ -91,7 +135,8 @@ def init_permission(current_user, request):
     #request.session[settings.PERMISSION_SESSION_KEY] = permission_list
     #request.session[settings.MENU_SESSION_KEY] = menu_list
     ############################       一级菜单代码结束   ############################
-    request.session[settings.PERMISSION_SESSION_KEY] = permission_list
+    #request.session[settings.PERMISSION_SESSION_KEY] = permission_list
+    request.session[settings.PERMISSION_SESSION_KEY] = permission_dict
     request.session[settings.MENU_SESSION_KEY] = menu_dict
 
     ###############100 test #####################

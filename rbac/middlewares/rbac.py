@@ -33,18 +33,35 @@ class RbacMiddleware(MiddlewareMixin):
 
 
         #这里用get()，而不是[]获取字典的key对应的vlaue, 因为用户没有登录时，session为空，get()不会报错
-        permission_list = request.session.get(settings.PERMISSION_SESSION_KEY)
+        #permission_list = request.session.get(settings.PERMISSION_SESSION_KEY)
+        permission_dict = request.session.get(settings.PERMISSION_SESSION_KEY)
 
-        if not permission_list:
+        # if not permission_list:
+        if not permission_dict:
             return HttpResponse('未获取到用户权限信息，请重新登录！')
 
         flag = False        #flat = False 表示未匹配成功
-        for item in permission_list:
+        url_record = [
+            {'title': '首页', 'url': '#'}
+        ]
+        #for item in permission_list:
+        for item in permission_dict.values():
             reg = "^%s$" % item['url']                # 给url 加起始符，终止符，精确匹配
             if re.match(reg, current_url):    #不能用current_url == url 因为reg变量中有正则表达式
                 flag = True
                 #将item['pid'] 或者 item['id']值赋给 request.current_selected_permission, 方便inclusision_tag 获取该值
                 request.current_selected_permission = item['pid'] or item['id']        #如果item['pid'] 为真，返回item['pid']的值，否则返回item['id'] 的值
+                #如果item['pid']为空，说明这个权限是菜单，否则这个权限只是个普通权限不能做菜单， item['id']是表的主键，肯定不为空，请参照 rbac_permission表
+                #request.current_selected_permission在本例中只有两个值，1，或者7
+                if not item['pid']:
+                    url_record.extend([{'title': item['title'], 'url': item['url'], 'class':'active'}])
+                else:
+                    url_record.extend([
+                        {'title': item['p_title'], 'url': item['p_url']},
+                        {'title': item['title'], 'url': item['url'],'class':'active'},
+                    ])
+                request.breadcrumb = url_record
+                print(request.breadcrumb)
                 break
 
 
