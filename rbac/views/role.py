@@ -78,4 +78,3 @@ def role_del(request, pk):
     # 当点击delete.html页面的确认按钮时,浏览器向服务器发送了一个post请求，url:http://127.0.0.1:8000/rbac/role/del/7/
     models.Role.objects.filter(id=pk).delete()
     return redirect(origin_url)
-
