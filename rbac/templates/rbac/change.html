@@ -6,7 +6,7 @@
             {% csrf_token %}
             {% for field in form %}
                 <div class="form-group">
-                    <label class="col-sm-2" control-label>{{ field.label }}</label>
+                    <label class="col-sm-2 control-label">{{ field.label }}</label> {#control-label的文本采用右对齐方式 #}
                     <div class="col-sm-8">
                         {{ field }}
                         <span style="color:red">{{ field.errors.0 }}</span>
