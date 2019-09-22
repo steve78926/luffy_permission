@@ -7,7 +7,7 @@ class Menu(models.Model):
     菜单表
     '''
     title = models.CharField(verbose_name='一级菜单名称', max_length=32)
-    icon = models.CharField(verbose_name='图标', max_length=32, null=True, blank=True)
+    icon = models.CharField(verbose_name='图标', max_length=32)       # 去掉null=True，blank=True 表示图标不允许为空
 
     def __str__(self):
         return self.title

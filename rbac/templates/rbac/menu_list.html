@@ -1,0 +1,64 @@
+{% extends 'layout.html' %}   {# 继承web目录下的layout.html不需要指定目录吗？ #}
+{% load rbac %}
+
+{% block css  %}
+    <style>
+        tr.active {     {# 给表格行中active样式，左边框加粗，黄色，bootstrap的active样式加背景色灰色 #}
+            border-left: 3px solid #fdc00f;
+        }
+    </style>
+{% endblock css %}
+
+
+{% block content %}
+    <h1>菜单列表</h1>
+
+    <div class="luffy-container">
+        <div class="col-md-3">          {# 让这个面板占页面的1/3 #}
+            <div class="panel panel-default">
+                <!-- Default panel contents -->
+                <div class="panel-heading">
+                    <i class="fa fa-book" aria-hidden="true">一级菜单</i>
+
+                    <a href="{% memory_url request 'rbac:menu_add' %}" class="right btn btn-success btn-xs"
+                    style="padding: 2px 8px; margin: -3px;">
+                        {# 向memory_url 函数传递request参数目的是将URL中的参数传给memory_url函数 #}
+                        <i class="fa fa-plus-circle" aria-hidden="true"></i>
+                        新建
+                    </a>
+                </div>
+
+
+                <!-- Table -->
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>名称</th>
+                        <th>图标</th>
+                        <th>选项</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+
+                    {% for row in menus %}
+                        {# row.id safe 之间不能有空格，否则报错 #}
+                    <tr class="{% if row.id|safe == menu_id  %}active{% endif %}"> {# row.id |safe 表示将数字转换成字符串 #}
+                        <td><a href="?mid={{ row.id }}">{{ row.title }}</a></td>
+                        <td><i class="fa {{ row.icon }}" aria-hidden="true"></i></td>
+                        <td>
+                                <a style="color:#333" href="{% memory_url request 'rbac:menu_edit' pk=row.id %}">
+                                    <i class="fa fa-edit" aria-hidden="true"></i>
+                                </a>
+                            |
+                                <a style="color:#d9534f" href="{% memory_url request 'rbac:menu_del' pk=row.id %}">
+                                    <i class="fa fa-trash-o" aria-hidden="true"></i>
+                                </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock content %}

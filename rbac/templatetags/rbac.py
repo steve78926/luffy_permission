@@ -6,6 +6,9 @@ import re
 from django.template import Library
 from django.conf import settings
 from collections import OrderedDict
+from django.http import QueryDict
+from django.urls import reverse
+from rbac.service import urls
 
 register = Library()    # 这个对象名必须叫register
 
@@ -106,4 +109,20 @@ def has_permission(request, name):
     '''
     if name in request.session[settings.PERMISSION_SESSION_KEY]:   #request.session[settings.PERMISSION_SESSION_KEY] 是权限字典
         return True
+
+@register.simple_tag            #生成反向url
+def memory_url(request, name, *args, **kwargs):
+    '''
+    生成带有原搜索条件的URL（替代了模板中的URL）
+    :param request: 例如： <WSGIRequest: GET '/rbac/menu/list/?mid=3'>
+    :param name:  例如："rbac:menu_add"
+    :return:
+    '''
+    return urls.memory_url(request, name, *args, **kwargs)  #调用luffy_permission\rbac\service\urls.py中的memory_url()
+
+
+
+
+
+
 

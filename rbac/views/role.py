@@ -46,7 +46,6 @@ def role_edit(request, pk):
     :return:
     '''
     obj = models.Role.objects.filter(id=pk).first()
-
     if not obj:
         return HttpResponse('角色不存在')
 

@@ -5,6 +5,7 @@ from django.urls import path, re_path, include
 from django.conf.urls import url
 from rbac.views import role
 from rbac.views import user
+from rbac.views import menu
 
 app_name = '[rbac]'         # 启动遇到报错 'Specifying a namespace in include() without providing an app_name '，添加此行
 urlpatterns = [
@@ -18,6 +19,11 @@ urlpatterns = [
     re_path(r'^user/edit/(?P<pk>\d+)/$', user.user_edit, name='user_edit'),
     re_path(r'^user/del/(?P<pk>\d+)/$', user.user_del, name='user_del'),
     re_path(r'^user/reset/password/(?P<pk>\d+)/$', user.user_reset_pwd, name='user_reset_pwd'),
+    re_path(r'^menu/list/$', menu.menu_list, name='menu_list'),
+    re_path(r'^menu/add/$', menu.menu_add, name='menu_add'),
+    re_path(r'^menu/edit/(?P<pk>\d+)/$', menu.menu_edit, name='menu_edit'),
+    re_path(r'^menu/del/(?P<pk>\d+)/$', menu.menu_del, name='menu_del'),
+
 ]
 
 #访问 http://127.0.0.1:8000/rbac/role/list/# 报错如下：
