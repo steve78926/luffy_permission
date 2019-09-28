@@ -102,7 +102,8 @@
                                     <i class="fa fa-edit" aria-hidden="true"></i>
                                 </a>
                                 |
-                                <a style="color:#d9534f" href="{% memory_url request 'rbac:second_menu_del' pk=row.id %}">
+                                <a style="color:#d9534f"
+                                   href="{% memory_url request 'rbac:second_menu_del' pk=row.id %}">
                                     <i class="fa fa-trash-o" aria-hidden="true"></i>
                                 </a>
                             </td>
@@ -116,5 +117,59 @@
                 </table>
             </div>
         </div>
+         <div class="col-md-5">          {# 让这个面板占页面的1/3 #}
+            <div class="panel panel-default">
+                <!-- Default panel contents -->
+                <div class="panel-heading">
+                    <i class="fa fa-gavel" aria-hidden="true">权限</i>
+                    {% if second_menu_id %}    {# 如果选中二级菜单或者second_menu_id存在，才显示按钮新建 #}
+                        <a href="{% memory_url request 'rbac:permission_add' second_menu_id=second_menu_id  %}"
+                           class="right btn btn-success btn-xs"
+                           style="padding: 2px 8px; margin: -3px;">
+                            {# 向memory_url 函数传递request参数目的是将URL中的参数传给memory_url函数 #}
+                            <i class="fa fa-plus-circle" aria-hidden="true"></i>
+                            新建
+                        </a>
+                    {% endif %}
+                </div>
+
+                <!-- Table -->
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>名称</th>
+                        <th>CODE & URL</th>
+                        <th>选项</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+
+                    {% for row in permissions %}
+                        <tr>
+                            <td rowspan="2">{{ row.title }} </td>      {# 单元格水平合并 #}
+                            <td>
+                                {{ row.name }}
+                            </td>
+                            <td>
+                                <a style="color:#333" href="{% memory_url request 'rbac:permission_edit' pk=row.id %}">
+                                    <i class="fa fa-edit" aria-hidden="true"></i>
+                                </a>
+                                |
+                                <a style="color:#d9534f"
+                                   href="{% memory_url request 'rbac:permission_del' pk=row.id %}">
+                                    <i class="fa fa-trash-o" aria-hidden="true"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" style="border-top:0">{{ row.url }}</td>
+                            {# colspan="2" 表示一个单元格占两列，单元格水平合并 #}
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
 {% endblock content %}

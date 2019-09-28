@@ -56,7 +56,13 @@ class MenuModelForm(forms.ModelForm):
 
 
 
-class SecondMenuModelForm(BootStrapModelForm):      #继承BootStrapModelFor类，优化表单样式
+class SecondMenuModelForm(BootStrapModelForm):      #继承BootStrapModelForm类，优化表单样式
     class Meta:
         model = models.Permission
         exclude = ['pid']
+
+
+class PermissionModelForm(BootStrapModelForm):
+    class Meta:
+        model = models.Permission
+        fields = ['title', 'name', 'url']

@@ -7,7 +7,7 @@
 from django.shortcuts import render, redirect,reverse, HttpResponse
 #from django.urls import reverse
 from rbac import models
-from rbac.forms.menu import MenuModelForm, SecondMenuModelForm
+from rbac.forms.menu import MenuModelForm, SecondMenuModelForm,PermissionModelForm
 from rbac.service.urls import memory_reverse
 
 
@@ -30,10 +30,23 @@ def menu_list(request):
          second_menus = models.Permission.objects.filter(menu_id=menu_id)
     else:
          second_menus = []
+
+    ################################### 权限分配 ########################################
+    second_menu_exists = models.Permission.objects.filter(id=second_menu_id).exists()
+
+    if not second_menu_exists:
+        second_menu_id = None
+
+    if second_menu_id:     #如果二级菜单的id存在，获取当前二级菜单下的所有权限
+        permissions = models.Permission.objects.filter(pid_id=second_menu_id)   #根据permission表中的pid_id=second_menu_id ，获取当前菜单下的所有权限
+    else:
+        permissions = []
+
     return render(request, 'rbac/menu_list.html',
                   {
                       'menus': menus,
                       'second_menus': second_menus,
+                      'permissions': permissions,
                       'menu_id': menu_id,
                       'second_menu_id': second_menu_id,
                   }
@@ -107,9 +120,10 @@ def second_menu_add(request, menu_id):
     :return:
     '''
 
-    menu_object = models.Menu.objects.filter(id=menu_id).first()
+    menu_object = models.Menu.objects.filter(id=menu_id).first()    #menu_object 直接打印是 menu。title 如 信息管理
     if request.method == 'GET':
-        form = SecondMenuModelForm(initial={'menu': menu_object})    #initial= {} 初始化赋值
+        form = SecondMenuModelForm(initial={'menu': menu_object})    #initial= {} 初始化赋值, menu_object, 如 信息管理
+        print("form:",form)
         return render(request, 'rbac/change.html', {'form': form})
 
     form = SecondMenuModelForm(data=request.POST)
@@ -152,6 +166,71 @@ def second_menu_del(request, pk):
     if request.method == 'GET':
         return render(request, 'rbac/delete.html',{'cancle':url})   #cancle 作为变量传给前端delete.html页面
 
-    # 当点击delete.html页面的确认按钮时,浏览器向服务器发送了一个post请求，url:http://127.0.0.1:8000/rbac/role/del/7/
+    # 当点击delete.html页面的确认按钮时,浏览器向服务器发送了一个post请求，http://127.0.0.1:8000/rbac/second/menu/del/14/?_filter=mid%3D13
+    models.Permission.objects.filter(id=pk).delete()
+    return redirect(url)
+
+def permission_add(request, second_menu_id):
+    '''
+    添加权限
+    :param request:
+    :param second_menu_id:
+    :return:
+    '''
+
+    if request.method == 'GET':
+        form = PermissionModelForm()    #initial= {} 初始化赋值, menu_object, 如 信息管理
+        return render(request, 'rbac/change.html', {'form': form})
+
+    form = PermissionModelForm(data=request.POST)
+    if form.is_valid():
+        second_menu_object = models.Permission.objects.filter(id=second_menu_id).first()
+        if not second_menu_object:
+            return HttpResponse('二级菜单不存在，请重新选择:')
+
+        #form.instance中包含用户提交的所有值, instance
+        # instance = models.Permission(title='', name='', url='', pid=second_menu_object)
+        # instance.pid = second_menu_object 相当于给instance 增加 pid=second_menu_object
+        # instance.save()
+
+        form.instance.pid = second_menu_object
+        form.save()
+        return redirect(memory_reverse(request, 'rbac:menu_list'))   #重定向到带原始参数的URL(通过URL参数反向解析得到带参的URL)
+
+    return render(request, 'rbac/change.html', {'form': form})   #防止表单没有输入直接点保存报错
+
+def permission_edit(request, pk):
+    '''
+    编辑二级菜单
+    :param request:
+    :param pk: 当前要编辑的二级菜单
+    :return:
+    '''
+
+    permission_object = models.Permission.objects.filter(id=pk).first()
+    if request.method == 'GET':
+        form = PermissionModelForm(instance=permission_object)    # 初始化赋值
+        return render(request, 'rbac/change.html', {'form': form})
+
+    form = PermissionModelForm(data=request.POST, instance=permission_object)
+    if form.is_valid():
+        form.save()
+        return redirect(memory_reverse(request, 'rbac:menu_list'))   #重定向到带原始参数的URL(通过URL参数反向解析得到带参的URL)
+
+    return render(request, 'rbac/change.html', {'form': form})   #防止表单没有输入直接点保存报错
+
+
+def permission_del(request, pk):
+    '''
+    删除二级菜单
+    :param request:
+    :return:
+    '''
+
+    url = memory_reverse(request, 'rbac:menu_list') #重定向到带原始参数的URL(通过URL参数反向解析得到带参的URL)
+    if request.method == 'GET':
+        return render(request, 'rbac/delete.html',{'cancle':url})   #cancle 作为变量传给前端delete.html页面
+
+    # 当点击delete.html页面的确认按钮时,浏览器向服务器发送了一个post请求，http://127.0.0.1:8000/rbac/second/menu/del/14/?_filter=mid%3D13
     models.Permission.objects.filter(id=pk).delete()
     return redirect(url)
