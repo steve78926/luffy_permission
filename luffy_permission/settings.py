@@ -52,7 +52,7 @@ MIDDLEWARE = [
     #'rbac.middlewares.rbac.RbacMiddleware',
 ]
 
-ROOT_URLCONF = 'luffy_permission.urls'
+ROOT_URLCONF = 'luffy_permission.urls'    #ROOT_URLCONF 表示根路由的配置文件
 
 TEMPLATES = [
     {
@@ -133,6 +133,10 @@ VALID_URL_LIST = [          #VALID_URL_LIST 是不受限权控制的白名单
 ]
 
 
+AUTO_DISCOVER_EXCLUDE = [
+        # '/admin/.*',
+        # '/login/.*',
+    ]
 
 
 

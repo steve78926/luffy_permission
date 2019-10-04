@@ -33,6 +33,8 @@ urlpatterns = [
     re_path(r'^permission/edit/(?P<pk>\d+)/$', menu.permission_edit, name='permission_edit'),
     re_path(r'^permission/del/(?P<pk>\d+)/$', menu.permission_del, name='permission_del'),
 
+    re_path(r'^multi/permissions/$', menu.multi_permissions, name='multi_permissions'),
+
 
 
 ]

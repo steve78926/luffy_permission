@@ -17,7 +17,7 @@ from django.contrib import admin
 from django.urls import path, re_path, include
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    re_path(r'^rbac/', include('rbac.urls', namespace='rbac')),
-    re_path(r'^', include('web.urls')),
+    path('admin/', admin.site.urls),    #如果是路由分发，则实例化生成 RegexURLResolver 对象
+    re_path(r'^rbac/', include('rbac.urls', namespace='rbac')),  #如果是路由分发，则实例化生成 RegexURLResolver 对象
+    re_path(r'^', include('web.urls')),   #如果是路由分发，则实例化生成 RegexURLResolver 对象
 ]

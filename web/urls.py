@@ -4,7 +4,7 @@ from web.views import customer, payment
 from web.views import accout
 
 urlpatterns = [
-    re_path(r'layout', customer.layout),
+    re_path(r'layout', customer.layout, name='customer_layout'),
     re_path(r'customer/list/$', customer.customer_list),
     re_path(r'customer/add/$', customer.customer_add),
     re_path(r'customer/edit/(?P<cid>\d+)/$', customer.customer_edit),
