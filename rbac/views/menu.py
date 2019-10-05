@@ -4,11 +4,14 @@
 菜单管理
 '''
 
+from collections import OrderedDict
 from django.shortcuts import render, redirect,reverse, HttpResponse
 #from django.urls import reverse
+from django.forms import formset_factory
 from rbac import models
-from rbac.forms.menu import MenuModelForm, SecondMenuModelForm,PermissionModelForm
+from rbac.forms.menu import MenuModelForm, SecondMenuModelForm,PermissionModelForm,MultiAddPermissionForm,MultiEditPermissionForm
 from rbac.service.urls import memory_reverse
+
 
 
 def menu_list(request):
@@ -237,7 +240,7 @@ def permission_del(request, pk):
 
 
 import re
-from collections import OrderedDict
+
 from django.conf import settings
 from django.utils.module_loading import import_string    #根据字符串形式导入模块，这句话不太明白
 #from django.urls import RegexURLResolver, RegexURLPattern     #此处与视频中一样
@@ -278,7 +281,6 @@ def recursion_urls(pre_namespace, pre_url, urlpatterns, url_ordered_dict):
             else:
                 name = item.name
             #url = pre_url + item._regex  注意：item._regex 表示当前URL,可能不存在
-            print("pre_url:",pre_url)
             url = pre_url + str(item.pattern)    # /^rbac/^user/edit/(?P<pk>\d+)/$， str(item.pattern)表示当前URL的字符串形式, 本案例中 /^rbac/  是pre_url
 
             #运行报错：'URLResolver' object has no attribute 'regex'
@@ -332,11 +334,67 @@ def multi_permissions(request):
     :param request:
     :return:
     '''
-    #获取项目中所有的URL
+    #1. 获取项目中所有的URL
     all_url_dict = get_all_url_dict()
+    '''
+    {
+        rbac:role_list {'name': 'rbac:role_list', 'url': '/rbac/role/list/'}
+        rbac:role_add {'name': 'rbac:role_add', 'url': '/rbac/role/add/'}
+        rbac:role_edit {'name': 'rbac:role_edit', 'url': '/rbac/role/edit/(?P<pk>\\d+)/'}
+    }
+    '''
+    router_name_set = set(all_url_dict.keys())  #项目中所有URL的name 集合
+
+    #2. 获取数据库中所有的URL
+    permissions = models.Permission.objects.all().values('id', 'title', 'name', 'url', 'menu_id', 'pid_id')
+    permission_dict = OrderedDict()
+    permission_name_set = set()
+    for row in permissions:
+        permission_dict[row['name']] = row
+        permission_name_set.add(row['name'])        #将数据库中的URL添加到集合中
+
+    '''
+    {
+        'rbac:role_list': {'id':1, 'title': '角色列表', 'name': 'rbac:role_list', url....},
+        'rbac:role_add': {'id':2, 'title': '添加角色', 'name': 'rbac:role_add', url....},
+        ....
+
+    }
+    '''
+
+    for name, value in permission_dict.items():
+        router_row_dict = all_url_dict.get(name)    #{'name': 'rbac:role_list', 'url': '/rbac/role/list/'}
+        if not router_row_dict:  #当数据库中的name, 但自动发现中没有name, 跳过当前循环
+            continue
+        if value['url'] != router_row_dict['url']:   #如果数据库中name对应的URL， 与自动发现name对应的url不相等
+            value['url'] = '自动发现URL和数据库URL中不一致'
+
+    #3. 应该添加，删除，修改的权限有哪些
+     #3.1 计算出应该增加的name
+    generate_name_list = router_name_set - permission_name_set   #自动发现name数量 大于 数据库中name数量
+    generate_formset_class = formset_factory(MultiAddPermissionForm, extra=0)
+    generate_formset = generate_formset_class(
+        initial=[row_dict for name,row_dict in all_url_dict.items() if name in generate_name_list])  #??
+
+    #print("generate_formset:",generate_formset)
+
+    #3.2 计算出应该删除的name
+    delete_name_list = permission_name_set - router_name_set
+    delete_row_list = [row_dict for name, row_dict in permission_dict.items() if name in delete_name_list]
+    print("delete_row_list:", delete_row_list)
+
+    #3.3 计算出应该更新的name
+
+    update_name_list = permission_name_set & router_name_set   #取两个集合的交集, 即集合1与集合2 都有的数据
+    update_formset_class = formset_factory(MultiEditPermissionForm, extra=0)
+    update_formset = update_formset_class(
+        initial=[row_dict for name, row_dict in permission_dict.items() if name in update_name_list])  #??
+
+
+    print("update_formset",update_formset)
     #print("all_url_dict:",all_url_dict)
-    for k,v in all_url_dict.items():
-        print(k,v)
+    # for k,v in all_url_dict.items():
+    #     print(k,v)
 
     '''
     输出结果：
@@ -362,4 +420,13 @@ rbac:permission_del {'name': 'rbac:permission_del', 'url': '/rbac/permission/del
 rbac:multi_permissions {'name': 'rbac:multi_permissions', 'url': '/rbac/multi/permissions/'}
 customer_layout {'name': 'customer_layout', 'url': '/layout'}
     '''
-    return HttpResponse('...')
+    return render(
+            request,
+            'rbac/multi_permissions.html',
+            {
+                'generate_formset': generate_formset,
+                'delete_row_list': delete_row_list,
+                'update_formset': update_formset,
+
+            }
+    )

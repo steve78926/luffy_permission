@@ -134,8 +134,8 @@ VALID_URL_LIST = [          #VALID_URL_LIST 是不受限权控制的白名单
 
 
 AUTO_DISCOVER_EXCLUDE = [
-        # '/admin/.*',
-        # '/login/.*',
+        '/admin/.*',
+        '/login/.*',
     ]
 
 
