@@ -117,20 +117,30 @@
                 </table>
             </div>
         </div>
-         <div class="col-md-5">          {# 让这个面板占页面的1/3 #}
+        <div class="col-md-5">          {# 让这个面板占页面的1/3 #}
             <div class="panel panel-default">
                 <!-- Default panel contents -->
                 <div class="panel-heading">
                     <i class="fa fa-gavel" aria-hidden="true">权限</i>
-                    {% if second_menu_id %}    {# 如果选中二级菜单或者second_menu_id存在，才显示按钮新建 #}
-                        <a href="{% memory_url request 'rbac:permission_add' second_menu_id=second_menu_id  %}"
-                           class="right btn btn-success btn-xs"
+                    <div class="btn-group right">
+                        {% if second_menu_id %}    {# 如果选中二级菜单或者second_menu_id存在，才显示按钮新建 #}
+                            <a href="{% memory_url request 'rbac:permission_add' second_menu_id=second_menu_id %}"
+                               class="right btn btn-success btn-xs"
+                               style="padding: 2px 8px; margin: -3px;">
+                                {# 向memory_url 函数传递request参数目的是将URL中的参数传给memory_url函数 #}
+                                <i class="fa fa-plus-circle" aria-hidden="true"></i>
+                                新建
+                            </a>
+                        {% endif %}
+
+                        <a href="{% memory_url request 'rbac:multi_permissions' %}"
+                           class="btn btn-xs btn-primary"
                            style="padding: 2px 8px; margin: -3px;">
                             {# 向memory_url 函数传递request参数目的是将URL中的参数传给memory_url函数 #}
-                            <i class="fa fa-plus-circle" aria-hidden="true"></i>
-                            新建
+                            <i class="fa fa-mail-forward" aria-hidden="true"></i>
+                            批量操作
                         </a>
-                    {% endif %}
+                    </div>
                 </div>
 
                 <!-- Table -->
@@ -146,7 +156,8 @@
 
                     {% for row in permissions %}
                         <tr>
-                            <td rowspan="2">{{ row.title }} </td>      {# 单元格水平合并 #}
+                            <td rowspan="2">{{ row.title }} </td>
+                            {# 单元格水平合并 #}
                             <td>
                                 {{ row.name }}
                             </td>
