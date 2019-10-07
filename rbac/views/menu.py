@@ -328,13 +328,65 @@ def get_all_url_dict():
     recursion_urls(None,'/', md.urlpatterns, url_ordered_dict)   #递归去获取所有的路由
     return url_ordered_dict
 
+
 def multi_permissions(request):
     '''
     批量操作权限
     :param request:
     :return:
     '''
-    #1. 获取项目中所有的URL
+
+    post_type = request.GET.get('type')
+    generate_formset_class = formset_factory(MultiAddPermissionForm, extra=0)
+    update_formset_class = formset_factory(MultiEditPermissionForm, extra=0)
+
+    generate_formset = None
+
+    if request.method == 'POST' and post_type == 'generate':
+        # pass    #批量添加
+        formset = generate_formset_class(data=request.POST)
+        if formset.is_valid():
+            object_list = []
+            post_row_list = formset.cleaned_data
+            has_error = False
+            for i in range(0, formset.total_form_count()):
+                row_dict = post_row_list[i]  # row_dict 表示每一行的数据
+                try:
+                    # 判断新记录对象在数据库中是否符合索引唯一的约束条件
+                    new_object = models.Permission(**row_dict)  # 用行数据实例化一个对象
+                    new_object.validate_unique()
+                    object_list.append(new_object)
+                except Exception as e:
+                    formset.errors[i].update(e)  # 校验索引唯一失败，更新错误信息
+                    generate_formset = formset  # 这行目的是在页面上显示错误信息
+                    has_error = True
+            if not has_error:  # 没有错误才可以批量增加
+                models.Permission.objects.bulk_create(object_list, batch_size=100)  # 没有错误信息时，批量增加100条数据
+        else:  # 如果formset校验失败，含校验错误数据的formset 赋值给generate_formset， 不再初始化生成formset数据
+            generate_formset = formset  # 包含校验错误数据的formset 赋值给generate_formset
+
+    update_formset = None
+    if request.method == 'POST' and post_type == 'update':
+        # pass    #批量更新
+        formset = update_formset_class(data=request.POST)
+        if formset.is_valid():
+            post_row_list = formset.cleaned_data
+            for i in range(0, formset.total_form_count()):
+                row_dict = post_row_list[i]
+                permission_id = row_dict.pop('id')
+                try:
+                    row_object = models.Permission.objects.filter(id=permission_id).first()
+                    for k, v in row_dict.items():  # 利用反射将row_dict的数据(校验后的页面数据)设置到row_object， k,v
+                        setattr(row_object, k, v)
+                    row_object.validate_unique()
+                    row_object.save()  # 由于是更新，不能批量插入数据库
+                except Exception as e:
+                    formset.errors[i].update(e)
+                    update_formset = formset
+        else:
+            update_formset = formset
+
+    # 1. 获取项目中所有的URL
     all_url_dict = get_all_url_dict()
     '''
     {
@@ -343,15 +395,16 @@ def multi_permissions(request):
         rbac:role_edit {'name': 'rbac:role_edit', 'url': '/rbac/role/edit/(?P<pk>\\d+)/'}
     }
     '''
-    router_name_set = set(all_url_dict.keys())  #项目中所有URL的name 集合
+    router_name_set = set(all_url_dict.keys())  # 项目中所有URL的name 集合
 
-    #2. 获取数据库中所有的URL
-    permissions = models.Permission.objects.all().values('id', 'title', 'name', 'url', 'menu_id', 'pid_id')
+    # 2. 获取数据库中所有的URL
+    permissions = models.Permission.objects.all().values('id', 'title', 'name', 'url', 'menu_id',
+                                                         'pid_id')  # 返回一个Queryset类型
     permission_dict = OrderedDict()
     permission_name_set = set()
     for row in permissions:
         permission_dict[row['name']] = row
-        permission_name_set.add(row['name'])        #将数据库中的URL添加到集合中
+        permission_name_set.add(row['name'])  # 将数据库中的URL添加到集合中
 
     '''
     {
@@ -363,36 +416,41 @@ def multi_permissions(request):
     '''
 
     for name, value in permission_dict.items():
-        router_row_dict = all_url_dict.get(name)    #{'name': 'rbac:role_list', 'url': '/rbac/role/list/'}
-        if not router_row_dict:  #当数据库中的name, 但自动发现中没有name, 跳过当前循环
+        router_row_dict = all_url_dict.get(name)  # {'name': 'rbac:role_list', 'url': '/rbac/role/list/'}
+        if not router_row_dict:  # 当数据库中有name, 但自动发现中没有name, ，在更新操作中处理，先跳过当前循环
             continue
-        if value['url'] != router_row_dict['url']:   #如果数据库中name对应的URL， 与自动发现name对应的url不相等
+        if value['url'] != router_row_dict['url']:  # 如果数据库中name对应的URL， 与自动发现name对应的url不相等
             value['url'] = '自动发现URL和数据库URL中不一致'
 
-    #3. 应该添加，删除，修改的权限有哪些
-     #3.1 计算出应该增加的name
-    generate_name_list = router_name_set - permission_name_set   #自动发现name数量 大于 数据库中name数量
-    generate_formset_class = formset_factory(MultiAddPermissionForm, extra=0)
-    generate_formset = generate_formset_class(
-        initial=[row_dict for name,row_dict in all_url_dict.items() if name in generate_name_list])  #??
+            # print("permission_dict:",permission_dict)
+            # 3. 应该添加，删除，修改的权限有哪些
+            # 3.1 计算出应该增加的name
 
-    #print("generate_formset:",generate_formset)
+    # 如果generate_formset不为None， 说明提交的请求是POST,不再初始化生成generate_formset数据，使用提交的generate_formset数据
+    # 如果generate_formset为None， 说明提交的请求是GET , generate_formset 初始化生成数据
+    if not generate_formset:
+        generate_name_list = router_name_set - permission_name_set  # 自动发现name数量 大于 数据库中name数量， 求差集
+        # generate_formset_class = formset_factory(MultiAddPermissionForm, extra=0)   #该行移动到本函数的顶部
+        # generate_formset_class(initial=[{'name': 'rbac:role_list', 'url': '/rbac/role/list/'},{'name': 'rbac:role_add', 'url': '/rbac/role/add/'}])  #initial示例
+        generate_formset = generate_formset_class(
+                initial=[row_dict for name, row_dict in all_url_dict.items() if name in generate_name_list])  # 列表生成式
 
-    #3.2 计算出应该删除的name
-    delete_name_list = permission_name_set - router_name_set
+    # print("generate_formset:",generate_formset)
+
+    # 3.2 计算出应该删除的name
+    delete_name_list = permission_name_set - router_name_set  # 数据库中name数量 大于 自动发现name数量 求差集
     delete_row_list = [row_dict for name, row_dict in permission_dict.items() if name in delete_name_list]
-    print("delete_row_list:", delete_row_list)
+    # print("delete_row_list:", delete_row_list)
 
-    #3.3 计算出应该更新的name
+    # 3.3 计算出应该更新的name
+    if not update_formset:
+        update_name_list = permission_name_set & router_name_set  # 取两个集合的交集, 即集合1与集合2 都有的数据
+        # update_formset_class = formset_factory(MultiEditPermissionForm, extra=0)   #这行代码移动到上面了
+        update_formset = update_formset_class(
+                initial=[row_dict for name, row_dict in permission_dict.items() if name in update_name_list])  # ??
 
-    update_name_list = permission_name_set & router_name_set   #取两个集合的交集, 即集合1与集合2 都有的数据
-    update_formset_class = formset_factory(MultiEditPermissionForm, extra=0)
-    update_formset = update_formset_class(
-        initial=[row_dict for name, row_dict in permission_dict.items() if name in update_name_list])  #??
-
-
-    print("update_formset",update_formset)
-    #print("all_url_dict:",all_url_dict)
+    # print("update_formset",update_formset)
+    # print("all_url_dict:",all_url_dict)
     # for k,v in all_url_dict.items():
     #     print(k,v)
 
@@ -429,4 +487,175 @@ customer_layout {'name': 'customer_layout', 'url': '/layout'}
                 'update_formset': update_formset,
 
             }
+    )
+
+
+def multi_permissions_del(request, pk):
+    '''
+    批量页面的权限删除
+    :param request:
+    :param pk:
+    :return:
+    '''
+    url = memory_reverse(request, 'rbac:multi_permissions')  # 重定向到带原始参数的URL(通过URL参数反向解析得到带参的URL)
+    if request.method == 'GET':
+        return render(request, 'rbac/delete.html', {'cancle': url})  # cancle 作为变量传给前端delete.html页面
+
+    # 当点击delete.html页面的确认按钮时,浏览器向服务器发送了一个post请求，http://127.0.0.1:8000/rbac/second/menu/del/14/?_filter=mid%3D13
+    models.Permission.objects.filter(id=pk).delete()
+    return redirect(url)
+
+
+def distribute_permissions(request):
+    '''
+    权限分配
+    :param request:
+    :return:
+    '''
+    user_id = request.GET.get('uid')
+    user_object = models.UserInfo.objects.filter(id=user_id).first()
+    if not user_object:
+        user_id = None
+
+    #获取当前用户所拥有的角色id
+    if user_id:
+        user_has_roles = user_object.roles.all()
+    else:
+        user_has_roles = []
+
+    user_has_roles_dict = { item.id:None for item in user_has_roles }  #将角色id构造成字典，因为字典查找速度快，实际上只需要角色id
+    '''
+    {
+        1:None,
+        2:None,
+        3:None,
+
+    }
+
+    '''
+
+    #获取当前用户所拥有的权限
+    #为什么要有permissions__id__isnull=False？ 一个角色如果没有权限，他可能出现None, 另外，还要去重复记录
+    if user_id:
+        user_has_permissions = user_object.roles.filter(permissions__id__isnull=False).values('id', 'permissions').distinct()   #通过role-permissions关系表，根据角色id, 查找permission_id
+    else:
+        user_has_permissions = []
+
+    #print("user_has_permissions",user_has_permissions) #<QuerySet [{'id': 3, 'permissions': 1}, {'id': 3, 'permissions': 2}]>
+    user_has_permissions_dict = { item['permissions']:None  for item in user_has_permissions }    # item['permission'] 表示权限id
+
+
+    all_user_list = models.UserInfo.objects.all()
+    all_role_list = models.Role.objects.all()
+
+    menu_permission_list = []
+
+    #通过3个for循环将一级菜单，二级菜单和所有权限组合起来，所有权限挂靠二级菜单，二级菜单挂靠一级菜单
+    #所有的菜单(一级菜单)
+    all_menu_list = models.Menu.objects.values('id', 'title')
+
+    '''
+    [
+        { id:'1', title: 菜单1， children: [{ id:'1', title:x1, menu_id: 1，children ：[{id:11, title: x2, pid: 1},},{ id:'2', title:x1, menu_id: 1},]},
+        { id:'2', title: 菜单2}, children: [{ id:'1', title:x1, menu_id: 2},{ id:'2', title:x1, menu_id: 2}
+        { id:'3', title: 菜单3},
+    ]
+    '''
+    all_menu_dict = { }
+    '''
+    {
+        1:{ id:'1', 'title': '菜单1', children:[{ id:'1', title:x1, menu_id: 1, children = [] },{ id:'2', title:x1, menu_id: 1, children = [] },]},
+        2:{ id:'2', 'title': '菜单2'}, children: [{ id:'3', title:x1, menu_id: 2, children = [] },{ id:'4', title:x1, menu_id: 2, children = [] },]},
+        3:{ id:'3', 'title': '菜单3', children:[]},
+        4:{ id:'4', 'title': '菜单4'},
+    }
+    '''
+    #将列表转化成字典的目的：需要频繁的将二级菜单的menu_id，在一级菜单中查找，转换成字典后查找会快， 第二，在字典中加条目，等同于在列表中加条目
+    for item in all_menu_list:
+        item['children'] = []
+        all_menu_dict[item['id']] = item   #all_menu_list 与all_menu_dict 是同一块内存地址，即如果修改了与all_menu_dict, 修改后的数据也会体现在all_menu_list
+
+    #所有的二级菜单
+    all_second_menu_list = models.Permission.objects.filter(menu__isnull=False).values('id', 'title', 'menu_id')            #menu__isnull=False 表示 menu_id 不为空
+
+    '''
+    为什么要获取menu_id ? 答：之后要将二级菜单归属到一级菜单
+    [
+        { id:'1', title:x1, menu_id: 1, children = [] },   #当menu_id: 1， 将该二级菜单归属到一级菜单id=1
+        { id:'2', title:x1, menu_id: 1, children = []},
+        { id:'3', title:x1, menu_id: 2, children = []},   #当menu_id: 2， 将该二级菜单归属到一级菜单id=2
+        { id:'4', title:x1, menu_id: 2, children = []},
+        { id:'5', title:x1, menu_id: 3, children = []},   #当menu_id: 3， 将该二级菜单归属到一级菜单id=3
+    ]
+
+    '''
+    all_second_menu_dict = { }
+    '''
+     {
+        1: { id:'1', title:x1, menu_id: 1, children = [{id:11, title: x2, pid: 1},]},   #当menu_id: 1， 将该二级菜单归属到一级菜单id=1
+        2: { id:'2', title:x1, menu_id: 1, children = []},
+        3: { id:'3', title:x1, menu_id: 2, children = []},   #当menu_id: 2， 将该二级菜单归属到一级菜单id=2
+        4: { id:'4', title:x1, menu_id: 2, children = []},
+        5: { id:'5', title:x1, menu_id: 3, children = []},   #当menu_id: 3， 将该二级菜单归属到一级菜单id=3
+    }
+    '''
+
+    for row in all_second_menu_list:
+        row['children'] = []    #放三级菜单
+        all_second_menu_dict[row['id']] = row
+        menu_id = row['menu_id']
+        all_menu_dict[menu_id]['children'].append(row)   #将二级菜单挂靠到一级菜单， all_menu_dict[menu_id]是一个字典，如：all_menu_dict[1]，它的children.append(row)
+
+    #所有的三级菜单(不能做菜单的权限)
+    all_permission_list = models.Permission.objects.filter(menu__isnull=True).values('id', 'title', 'pid_id')            #menu__isnull=False 表示 menu_id 不为空
+
+    #一级菜单，二级菜单与所有权限都是同一块内存
+    '''
+    [
+        {id:11, title: x2, pid: 1},    #根据pid找到二级菜单
+        {id:12, title: x2, pid: 1},
+        {id:13, title: x2, pid: 2},
+        {id:14, title: x2, pid: 3},
+        {id:15, title: x2, pid: 4},
+        {id:15, title: x2, pid: 5},
+    ]
+    '''
+    #三级菜单挂到二级菜单， 一级菜单引用二级菜单，二级菜单引用所有权限， 即一级菜单包括所有的数据
+    for row in all_permission_list:
+        pid = row['pid_id']        #pid_id 可能为None 为什么？因为在批量操作权限页面，有可能即没选择菜单和也没选择父权限
+        if not pid:
+            continue
+        all_second_menu_dict[pid]['children'].append(row)    #所有权限挂靠到二级菜单，all_second_menu_dict[pid]是一个字典, 如all_second_menu_dict[7]，它的children.append(row)
+
+    '''
+    构造最终的数据结构如下
+    [
+        {
+            id:1,
+            title: '业务管理',
+            children: [
+                {
+                    'id': 11,
+                    title: '账单列表'，
+                    children: [
+                        {'id': 12, title: '客户列表'},
+                    },
+                {'id': 12, title: '客户列表'},
+            ]
+        },
+    ]
+    '''
+    #print("all_menu_list:",all_menu_list)
+    return render(
+        request,
+            'rbac/distribute_permissions.html',
+        {
+            'user_list': all_user_list,
+            'role_list': all_role_list,
+            'all_menu_list':all_menu_list,
+            'user_id': user_id,
+            'user_has_roles_dict': user_has_roles_dict,
+            'user_has_permissions_dict': user_has_permissions_dict,
+
+        }
     )

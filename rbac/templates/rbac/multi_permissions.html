@@ -1,18 +1,20 @@
 {% extends 'layout.html' %}
-
 {% block content %}
     <div class="luffy-container">
-        <div class="panel panel-default">
+        <form action="?type=generate" method="post">
+            {% csrf_token %}
+            {{ generate_formset.management_form  }}
+            <div class="panel panel-default">
             <!-- Default panel contents -->
             <div class="panel-heading">
                 <i class="fa fa-th-list" aria-hidden="true"></i> 待新建的权限列表
 
-                <a href="#" class="right btn btn-primary btn-xs"
+                <button href="#" class="right btn btn-primary btn-xs"
                    style="padding: 2px 8px; margin: -3px;">
                     {# 向memory_url 函数传递request参数目的是将URL中的参数传给memory_url函数 #}
-                    <i class="fa fa-plus-circle" aria-hidden="true"></i>
+                    <i class="fa fa-save" aria-hidden="true"></i>
                     新建
-                </a>
+                </button>
             </div>
 
 
@@ -40,6 +42,8 @@
                 </tbody>
             </table>
         </div>
+        </form>
+
 
         <div class="panel panel-default">
             <!-- Default panel contents -->
@@ -68,7 +72,7 @@
                         <td>{{ row.name }}</td>
                         <td>
                             <a style="color:#d9534f"
-                               href="#">
+                               href="{% url 'rbac:multi_permissions_del' pk=row.id %}">
                                 <i class="fa fa-trash-o" aria-hidden="true"></i>
                             </a>
                         </td>
@@ -78,10 +82,19 @@
             </table>
         </div>
 
+
+    <form action="?type=update" method="post">
+        {% csrf_token %}
+         {{ update_formset.management_form  }}
         <div class="panel panel-default">
             <!-- Default panel contents -->
             <div class="panel-heading">
                 <i class="fa fa-th-list" aria-hidden="true"></i> 待更新的权限列表
+                <button href="#" class="right btn btn-primary btn-xs"
+                style="padding:2px 8px;margin: -3px;">
+                    <i class="fa fa-save" aria-hidden="true"></i>
+                    保存
+                </button>
             </div>
 
 
@@ -102,8 +115,8 @@
                     <tr>
                         <td>{{ forloop.counter }}</td>
                         {% for field in form %}
-                            {% if forloop.first %}
-                                {{ field }}
+                            {% if forloop.first %}  {# 如果是第一次循环，即form中的id的字段(隐藏字段), 不让其占用一个单元格，则不会产生错位显示 #}
+                                {{ field }}     {#  {{ field }} 不占单元格，这样写 <td>{{ field }}</td> 占用单元格，会错位显示  #}
                             {% else %}
                                 <td>{{ field }} <span style="color:red;">{{ field.errors.0 }}</span></td>
                             {% endif %}
@@ -113,5 +126,6 @@
                 </tbody>
             </table>
         </div>
+     </form>
     </div>
 {% endblock content %}
