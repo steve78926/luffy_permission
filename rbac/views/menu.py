@@ -517,6 +517,26 @@ def distribute_permissions(request):
     if not user_object:
         user_id = None
 
+    role_id = request.GET.get('rid')
+    role_object = models.Role.objects.filter(id=role_id).first()
+    if not role_object:
+        role_id = None
+
+    print(request.POST)
+    if request.method == 'POST' and request.POST.get('type') == 'role':
+        role_id_list = request.POST.getlist('roles')   #roles 是所有复选框， 前端页面 <input class="" type="checkbox" name="roles"
+        # 用户和角色关系添加到第三张表(关系表)
+        if not user_object:
+            return HttpResponse('请选择用户，然后再分配角色')
+        user_object.roles.set(role_id_list) #通过user对象的roles属性的set()向第三张关系表添加记录
+
+    if request.method == 'POST' and request.POST.get('type') == 'permission':
+        permission_id_list = request.POST.getlist('permissions')  #permissions 是所有复选框，<input  name="permissions"  type="checkbox"
+        # 用户和角色关系添加到第三张表(关系表)
+        if not role_object:
+            return HttpResponse('请选择角色，然后再分配权限')
+        role_object.permissions.set(permission_id_list) #通过role对象的permissions属性的set()向第三张关系表添加记录
+
     #获取当前用户所拥有的角色id
     if user_id:
         user_has_roles = user_object.roles.all()
@@ -535,14 +555,25 @@ def distribute_permissions(request):
     '''
 
     #获取当前用户所拥有的权限
-    #为什么要有permissions__id__isnull=False？ 一个角色如果没有权限，他可能出现None, 另外，还要去重复记录
-    if user_id:
+
+    #如果只选中的角色，优先显示选中角色中所拥有的权限
+    #如果没有选择角色，才显示用户所拥有的权限
+
+    if role_object:         #只选择了角色，显示当前角色所拥有的所有权限
+        user_has_permissions = role_object.permissions.all()
+        user_has_permissions_dict = {item.id:None for item in user_has_permissions }    # item.id 表示rbac_role_permissions权限id，即permission_id
+        #print("user_has_permissions1",user_has_permissions) #<QuerySet [<Permission: Permission object (1)>, <Permission: Permission object (2)>, 返回多条rbac_permission表的记录对象
+
+    elif user_object:       #未选择角色 ，但选择了用户，显示该用户所拥有的角色以及对应的角色的权限
+     #为什么要有permissions__id__isnull=False？ 一个角色如果没有权限，他可能出现None, 另外，还要去重复记录
         user_has_permissions = user_object.roles.filter(permissions__id__isnull=False).values('id', 'permissions').distinct()   #通过role-permissions关系表，根据角色id, 查找permission_id
+        user_has_permissions_dict = { item['permissions']:None  for item in user_has_permissions }    # item['permission'] 表示权限id
+        print("user_has_permissions",user_has_permissions) #<QuerySet [{'id': 3, 'permissions': 1}, {'id': 3, 'permissions': 2}]>
+
     else:
         user_has_permissions = []
+        user_has_permissions_dict = { }
 
-    #print("user_has_permissions",user_has_permissions) #<QuerySet [{'id': 3, 'permissions': 1}, {'id': 3, 'permissions': 2}]>
-    user_has_permissions_dict = { item['permissions']:None  for item in user_has_permissions }    # item['permission'] 表示权限id
 
 
     all_user_list = models.UserInfo.objects.all()
@@ -656,6 +687,7 @@ def distribute_permissions(request):
             'user_id': user_id,
             'user_has_roles_dict': user_has_roles_dict,
             'user_has_permissions_dict': user_has_permissions_dict,
+            'role_id': role_id,
 
         }
     )
