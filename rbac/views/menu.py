@@ -429,13 +429,14 @@ def multi_permissions(request):
     # 如果generate_formset不为None， 说明提交的请求是POST,不再初始化生成generate_formset数据，使用提交的generate_formset数据
     # 如果generate_formset为None， 说明提交的请求是GET , generate_formset 初始化生成数据
     if not generate_formset:
+        print("generate_formset:", generate_formset)
         generate_name_list = router_name_set - permission_name_set  # 自动发现name数量 大于 数据库中name数量， 求差集
         # generate_formset_class = formset_factory(MultiAddPermissionForm, extra=0)   #该行移动到本函数的顶部
         # generate_formset_class(initial=[{'name': 'rbac:role_list', 'url': '/rbac/role/list/'},{'name': 'rbac:role_add', 'url': '/rbac/role/add/'}])  #initial示例
         generate_formset = generate_formset_class(
                 initial=[row_dict for name, row_dict in all_url_dict.items() if name in generate_name_list])  # 列表生成式
 
-    # print("generate_formset:",generate_formset)
+
 
     # 3.2 计算出应该删除的name
     delete_name_list = permission_name_set - router_name_set  # 数据库中name数量 大于 自动发现name数量 求差集
